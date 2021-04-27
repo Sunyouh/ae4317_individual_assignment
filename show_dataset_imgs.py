@@ -1,5 +1,6 @@
 import cv2
 import sys
+import os
 import os.path as osp
 import numpy as np
 
@@ -17,17 +18,28 @@ def main():
     csv_path = osp.join(img_path, 'corners.csv')
     csv_data = read_csv(csv_path)
 
+    img_filename = csv_data[0][0].decode("utf-8")
+    im = cv2.imread(osp.join(img_path, img_filename))
+
     for _l in csv_data:
+        # print(img_filename, _l[0])
+        if img_filename != _l[0]:
+            cv2.imshow('im', im)
+            cv2.waitKey(0)
+            img_filename = _l[0]
+            im = cv2.imread(osp.join(img_path, img_filename.decode("utf-8")))
+
         img_file, x_t_l, y_t_l, x_t_r, y_t_r, x_b_r, y_b_r, x_b_l, y_b_l = _l
         pts = np.array([[x_t_l, y_t_l], [x_t_r, y_t_r], [x_b_r, y_b_r], [x_b_l, y_b_l]], np.int32)
         # pts = np.array([[y_t_l, x_t_l], [y_t_r, x_t_r], [y_b_r, x_b_r], [y_b_l, x_b_l]], np.int32)
         pts = pts.reshape((-1, 1, 2))
-        im = cv2.imread(osp.join(img_path, img_file))
         cv2.polylines(im, pts, True, (255, 0, 255), 10)
-        print(im.shape)
 
-        cv2.imshow('im', im)
-        cv2.waitKey(0)
+        # xmin = min(x_t_l, x_b_l)
+        # xmax = max(x_t_r, x_b_r)
+        # ymin = min(y_t_l, y_t_r)
+        # ymax = max(y_b_l, y_b_r)
+        cv2.rectangle(im, (x_t_l, y_t_l), (x_b_r, y_b_r), (0, 255, 255), 3)
 
 
 if __name__ == '__main__':
