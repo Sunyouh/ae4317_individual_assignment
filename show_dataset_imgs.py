@@ -1,5 +1,4 @@
 import cv2
-import sys
 import os
 import os.path as osp
 import numpy as np
@@ -35,10 +34,6 @@ def main():
         pts = pts.reshape((-1, 1, 2))
         cv2.polylines(im, pts, True, (255, 0, 255), 10)
 
-        # xmin = min(x_t_l, x_b_l)
-        # xmax = max(x_t_r, x_b_r)
-        # ymin = min(y_t_l, y_t_r)
-        # ymax = max(y_b_l, y_b_r)
         cv2.rectangle(im, (x_t_l, y_t_l), (x_b_r, y_b_r), (0, 255, 255), 3)
 
 
