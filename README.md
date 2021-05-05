@@ -1,15 +1,19 @@
 # ae4317_individual_assignment
 
-# Dataset: WashingtonOBRace
-# Total 308 images
-# train:eval = 218:90 (~= 7:3)
-
-
 # Codes are tested on Ubuntu 20.04 LTS
 # Python 3.8.5
 # numpy 1.19.5
 # pillow 7.0.0
 # Tensorflow 2.4.1 (with CUDA 11.3, CuDNN 8.2)
+
+# Dataset: WashingtonOBRace
+# Total 308 images
+# train:eval = 218:90 (~= 7:3)
+
+# tf_model
+# SSD-MobileNet trained on WashingtonOBRace dataset
+# AP 0.971(IoU>0.5), 0.888(IoU>0.75)
+# Necessary parameters are defined in pipeline.config
 
 
 # To make tfrecord:
@@ -31,4 +35,5 @@ $ python object_detection/model_main_tf2.py \
 
 
 # To run inference
-# Required TF2
+# Requires TF2
+$ python run_inference.py --img_path=${PATH_TO_EVAL_IMGS}

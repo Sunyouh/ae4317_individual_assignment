@@ -1,4 +1,4 @@
-import sys
+import argparse
 import os
 import os.path as osp
 import numpy as np
@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from tf_utils import visualization_utils as viz_utils
 
+# Using TFv2
 import tensorflow as tf
 
 tf.get_logger().setLevel('ERROR')           # Suppress TensorFlow logging (2)
@@ -17,19 +18,23 @@ for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
 
+# Parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--model_path', type=str, help='Saved TF model path', default=None, required=False)
+parser.add_argument('--img_path', type=str, help='Path to evaluation images', default=None, required=False)
+args = parser.parse_args()
+
+
 class GateDetector:
-    def __init__(self, args=None):
-        self.model_path = '/home/sunyou/projects/ae4317/ae4317_individual_assignment/tf_model/saved_model'
+    def __init__(self, model_path):
+        self.model_path = model_path
         self.model = None
 
     def load_model(self):
         # Load saved model and build the detection function
         self.model = tf.saved_model.load(self.model_path)
 
-    def draw_boxes(self, detection_result):
-        pass
-
-    def run_detector(self, input_img_np):
+    def run_detector(self, input_img_np, min_score_thres=0.5):
         # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
         input_tensor = tf.convert_to_tensor(input_img_np)
         # The model expects a batch of images, so add an axis with `tf.newaxis`.
@@ -49,10 +54,8 @@ class GateDetector:
 
         # detection_classes should be ints.
         detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
-        boxes = detections['detection_boxes']
-        scores = detections['detection_scores']
-        # print(boxes)
-        # print(scores)
+        # boxes = detections['detection_boxes']
+        # scores = detections['detection_scores']
 
         image_np_with_detections = input_img_np.copy()
 
@@ -64,30 +67,38 @@ class GateDetector:
             {},
             use_normalized_coordinates=True,
             max_boxes_to_draw=200,
-            min_score_thresh=.50,
+            min_score_thresh=min_score_thres,
             agnostic_mode=False,
             skip_labels=True)
 
-        # img_show = np.hstack((image_np_with_detections, input_img_np))
-        plt.figure()
-        plt.imshow(image_np_with_detections)
-        plt.show()
+        return image_np_with_detections
 
 
 def main():
-    # TODO: argv
-    PATH_TO_SAVED_MODEL = '/home/sunyou/projects/ae4317/ae4317_individual_assignment/tf_model/saved_model'
-    IMG_PATH = '/home/sunyou/projects/ae4317/ae4317_individual_assignment/eval_imgs'
+    # set model and image path
+    default_path = osp.dirname(osp.abspath(__file__))
+    img_path = args.img_path
+    model_path = args.model_path
+    if img_path is None:
+        img_path = osp.join(default_path, 'eval_imgs')
+    if model_path is None:
+        model_path = osp.join(default_path, 'tf_model/saved_model')
 
-    detector = GateDetector()
+    detector = GateDetector(model_path)
     detector.load_model()
 
-    img_files = os.listdir(IMG_PATH)
-
+    # read every image in the image dir
+    img_files = os.listdir(img_path)
     for f in img_files:
-        image_np = np.array(Image.open(osp.join(IMG_PATH, f)))
+        image_np = np.array(Image.open(osp.join(img_path, f)))
 
-        detector.run_detector(image_np)
+        # run detection, default confidence threshold=0.5
+        result_img = detector.run_detector(image_np)
+
+        # show result image
+        plt.figure()
+        plt.imshow(result_img)
+        plt.show()
 
 
 if __name__ == '__main__':
